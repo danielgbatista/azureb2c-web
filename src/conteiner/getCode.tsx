@@ -1,46 +1,30 @@
-/* eslint-disable react-hooks/exhaustive-deps */
 import "../index.css";
-import { FC, useEffect, useState } from "react";
-import { useCode } from "../hooks/useCode";
-import { JwtPayload, jwtDecode } from "jwt-decode";
-import { getToken } from "../service/getToken";
+import { FC } from "react";
+import { useToken } from "../hooks/useToken";
+import useRefreshToken from "../hooks/useRefreshToken";
 
 export const GetCode: FC = () => {
-  const code = useCode();
-  const [token, setToken] = useState<string | null>();
-  const [decodedToken, setDecodedToken] = useState<JwtPayload | null>();
-
-  useEffect(() => {
-    const fetchToken = async () => {
-      if (code) {
-        try {
-          const response = await getToken(code);
-
-          const access_token = response ? response.access_token : null;
-          const decodedToken = response
-            ? jwtDecode(response.access_token)
-            : null;
-
-          setToken(access_token);
-          setDecodedToken(decodedToken);
-        } catch (error) {
-          console.error("Erro ao obter token:", error);
-        }
-      }
-    };
-
-    fetchToken();
-  }, [code]);
+  const { decodedToken, token } = useToken();
+  const { refresh, refreshToken } = useRefreshToken();
 
   return (
     <div className="container">
       <div className="code_item">
         <p>Token codificado: </p>
-        <code className="token_content">"access_token":{token}</code>
+        <code className="token_content">
+          "access_token":{refreshToken ? refreshToken.access_token : token}
+        </code>
+        <button className="button" onClick={() => refresh()}>
+          <b>Refresh Token</b>
+        </button>
       </div>
       <div className="code_item">
         <p>Token decodificado: </p>
-        <code className="token_content">{JSON.stringify(decodedToken)}</code>
+        <code className="token_content">
+          {refreshToken
+            ? JSON.stringify(refreshToken)
+            : JSON.stringify(decodedToken)}
+        </code>
       </div>
     </div>
   );
